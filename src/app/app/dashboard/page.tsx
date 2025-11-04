@@ -1,8 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { useTodos } from '@/hooks/use-todos'
 
 export default function DashboardPage() {
+  const { todos, loading } = useTodos()
+
   const containerStyle: React.CSSProperties = {
     flex: 1,
     padding: '24px',
@@ -72,6 +75,47 @@ export default function DashboardPage() {
     gap: '8px',
   }
 
+  const todayTasks = todos
+    .filter(todo => todo.status === 'active')
+    .slice(0, 3)
+
+  const getPriorityStyle = (priority: string): React.CSSProperties => {
+    switch (priority) {
+      case 'urgent': return { backgroundColor: '#fee2e2', color: '#dc2626' }
+      case 'high': return { backgroundColor: '#fed7aa', color: '#ea580c' }
+      case 'medium': return { backgroundColor: '#dbeafe', color: '#2563eb' }
+      case 'low': return { backgroundColor: '#f3f4f6', color: '#6b7280' }
+      default: return { backgroundColor: '#f3f4f6', color: '#6b7280' }
+    }
+  }
+
+  const getPriorityText = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return '紧急'
+      case 'high': return '高'
+      case 'medium': return '中'
+      case 'low': return '低'
+      default: return '未知'
+    }
+  }
+
+  if (loading) {
+    return (
+      <>
+        <div style={sidebarStyle}>
+          <Link href="/" style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', textDecoration: 'none', marginBottom: '24px' }}>
+            ToDo 应用
+          </Link>
+        </div>
+        <div style={{ ...containerStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center', color: '#6b7280' }}>
+            <div style={{ fontSize: '18px', marginBottom: '8px' }}>加载中...</div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   const activeNavItem = {
     ...navItemStyle,
     backgroundColor: '#dbeafe',
@@ -132,38 +176,40 @@ export default function DashboardPage() {
             <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px' }}>欢迎回来！</h1>
             <p style={{ color: '#6b7280', fontSize: '16px' }}>今天是 2025年11月3日</p>
           </div>
-          <button style={buttonStyle}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'inline', marginRight: '8px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            新建任务
-          </button>
+          <Link href="/app/todos">
+            <button style={buttonStyle}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'inline', marginRight: '8px' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              新建任务
+            </button>
+          </Link>
         </div>
 
         {/* 统计卡片 */}
         <div style={statsGridStyle}>
           <div style={statCardStyle}>
             <div style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>今日任务</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>8</div>
-            <div style={{ color: '#16a34a', fontSize: '14px', marginTop: '4px' }}>↑ 3 个新增</div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb' }}>{todos.filter(t => t.status === 'active').length}</div>
+            <div style={{ color: '#16a34a', fontSize: '14px', marginTop: '4px' }}>{todos.length} 个总任务</div>
           </div>
 
           <div style={statCardStyle}>
             <div style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>已完成</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#16a34a' }}>24</div>
-            <div style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>本周累计</div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#16a34a' }}>{todos.filter(t => t.status === 'completed').length}</div>
+            <div style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>{todos.length > 0 ? Math.round((todos.filter(t => t.status === 'completed').length / todos.length) * 100) : 0}% 完成率</div>
           </div>
 
           <div style={statCardStyle}>
-            <div style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>我的画板</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#9333ea' }}>5</div>
-            <div style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>最近更新</div>
+            <div style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>紧急任务</div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#dc2626' }}>{todos.filter(t => t.priority === 'urgent' && t.status === 'active').length}</div>
+            <div style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>需要关注</div>
           </div>
 
           <div style={statCardStyle}>
-            <div style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>AI 助手</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#ea580c' }}>12</div>
-            <div style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>条建议</div>
+            <div style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>本周新增</div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#ea580c' }}>{todos.length}</div>
+            <div style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>个任务</div>
           </div>
         </div>
 
@@ -178,38 +224,27 @@ export default function DashboardPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
-                <input type="checkbox" defaultChecked style={{ width: '18px', height: '18px' }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500' }}>完成项目架构设计</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280' }}>优先级：高 | 分类：工作</div>
+              {todayTasks.length > 0 ? (
+                todayTasks.map((todo) => (
+                  <div key={todo.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+                    <input type="checkbox" style={{ width: '18px', height: '18px' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '14px', fontWeight: '500' }}>{todo.title}</div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>优先级：{getPriorityText(todo.priority)} | 分类：{todo.category}</div>
+                    </div>
+                    <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', ...getPriorityStyle(todo.priority) }}>
+                      {getPriorityText(todo.priority)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '32px', color: '#9ca3af' }}>
+                  <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ margin: '0 auto 12px' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p>还没有任务，去创建一个吧！</p>
                 </div>
-                <span style={{ padding: '4px 8px', backgroundColor: '#fed7aa', color: '#ea580c', borderRadius: '4px', fontSize: '12px' }}>
-                  高
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
-                <input type="checkbox" style={{ width: '18px', height: '18px' }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500' }}>集成 DeepSeek AI</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280' }}>优先级：紧急 | 分类：开发</div>
-                </div>
-                <span style={{ padding: '4px 8px', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '4px', fontSize: '12px' }}>
-                  紧急
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
-                <input type="checkbox" style={{ width: '18px', height: '18px' }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500' }}>实现 GitHub 图床</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280' }}>优先级：中 | 分类：开发</div>
-                </div>
-                <span style={{ padding: '4px 8px', backgroundColor: '#dbeafe', color: '#2563eb', borderRadius: '4px', fontSize: '12px' }}>
-                  中
-                </span>
-              </div>
+              )}
             </div>
           </div>
 
@@ -239,12 +274,14 @@ export default function DashboardPage() {
             <div style={sectionStyle}>
               <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>快速操作</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button style={{ ...buttonStyle, backgroundColor: '#16a34a' }}>
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'inline', marginRight: '8px' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                  新建任务
-                </button>
+                <Link href="/app/todos">
+                  <button style={{ ...buttonStyle, backgroundColor: '#16a34a' }}>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'inline', marginRight: '8px' }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    新建任务
+                  </button>
+                </Link>
 
                 <Link href="/app/boards" style={{ ...buttonStyle, backgroundColor: '#9333ea', textDecoration: 'none', display: 'block', textAlign: 'center' }}>
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'inline', marginRight: '8px' }}>
